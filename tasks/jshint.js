@@ -8,15 +8,21 @@
 
 'use strict';
 
+var _=require('lodash');
+
 module.exports = function(grunt) {
 
   // Internal lib.
   var jshint = require('./lib/jshint').init(grunt);
 
   grunt.registerMultiTask('jshint', 'Validate files with JSHint.', function() {
+    // non-jshint options
+    var taskOptionKeys = ['warnOnly'];
+    
     // Merge task-specific and/or target-specific options with these defaults.
-    var options = this.options();
-
+    var options = _(this.options()).omit(taskOptionKeys);
+    var taskOptions = _(this.options()).pick(taskOptionKeys);
+    
     // Read JSHint options from a specified jshintrc file.
     if (options.jshintrc) {
       options = grunt.file.readJSON(options.jshintrc);
@@ -45,8 +51,8 @@ module.exports = function(grunt) {
       jshint.lint(grunt.file.read(filepath), options, globals, filepath);
     });
 
-    // Fail task if errors were logged.
-    if (this.errorCount) { return false; }
+    // Fail task if errors were logged and not warn only mode.
+    if (this.errorCount) { return taskOptions.warnOnly? true : false; }
 
     // Otherwise, print a success message.
     grunt.log.ok(files.length + ' file' + (files.length === 1 ? '' : 's') + ' lint free.');
